@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consumindo minha API</title>
+    <title>Mercados</title>
 </head>
 <body>
-    <button onclick="consultar()">Consultar</button>
+    <h1>Cadastrar Mercados</h1>
+
+    <form>
+        <input type="text" id="nome" name="nome" required>
+        <input type="text" id="endereco" name="endereco" required>
+        <button onclick="cadastrarMercado()">Cadastrar</button>
+        <button onclick="listarMercados()">Listar</button>
+    </form>
+
     <script>
-        function consultar() {
-            fetch('http://localhost:3000/alunos')
-            .then(res => res.json())
-            .then(res => console.log(res))
-            .catch(err => console.error('Erro ao consultar API:', err)); // Adicionando tratamento de erro
-        }
     </script>
 </body>
 </html>

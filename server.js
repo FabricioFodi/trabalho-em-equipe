@@ -1,223 +1,136 @@
 const express = require('express');
-const cors = require('cors'); // Corrigido o nome do módulo
+const cors = require('cors');
 const server = express();
-const conexao = require('./bancodados'); // Corrigido o caminho do módulo
+const conexao = require('./bancodados'); // Módulo de conexão com o banco de dados
 
 // Middleware para tratar JSON
 server.use(express.json());
-server.use(cors()); // Corrigido o nome do middleware
+server.use(cors());
 
 // Rota GET para retornar a mensagem inicial e informar como acessar a API
 server.get('/', (req, res) => {
     console.log('Rota GET inicial');
-    res.json({ mensagem: 'Acesse a API através de http://localhost:3000/alunos ou http://localhost:3000/cursos' });
+    res.json({ mensagem: 'Acesse a API através de http://localhost:3000/produtos' });
 });
 
-// Rota GET para retornar todos os alunos
-server.get('/alunos', (req, res) => {
-    console.log('Consulta de todos os alunos');
-    conexao.query('SELECT * FROM alunos', (erro, resultados) => {
+// Rota GET para retornar todos os produtos
+server.get('/produtos', (req, res) => {
+    console.log('Consulta de todos os produtos');
+    conexao.query('SELECT * FROM produtos', (erro, resultados) => {
         if (erro) {
-            console.error('Erro ao consultar alunos:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao consultar alunos.' });
+            console.error('Erro ao consultar produtos:', erro.message);
+            return res.status(500).json({ mensagem: 'Erro ao consultar produtos.' });
         }
         res.json(resultados);
     });
 });
 
-// Rota GET para retornar todos os cursos
-server.get('/cursos', (req, res) => {
-    console.log('Consulta de todos os cursos');
-    conexao.query('SELECT * FROM cursos', (erro, resultados) => {
-        if (erro) {
-            return res.status(500).json({ mensagem: 'Erro ao consultar cursos.' });
-        }
-        res.json(resultados);
-    });
-});
-
-// Rota POST para adicionar um novo aluno e matriculá-lo
-server.post('/alunos', (req, res) => {
-    console.log('Requisição para cadastro de aluno');
+// Rota POST para adicionar um novo produto ao estoque
+server.post('/produtos', (req, res) => {
+    console.log('Requisição para adicionar produto');
     console.log('Body da requisição:', req.body);
 
-    const { id, nome, idMatricula, curso_id, data_matricula } = req.body;
+    const { id, nome, quantidade, preco, data_adicao } = req.body;
 
     // Verificação básica
-    if (!id || !nome || !idMatricula || !curso_id || !data_matricula) {
+    if (!id || !nome || !quantidade || !preco || !data_adicao) {
         return res.status(400).json({ mensagem: 'Todos os campos são obrigatórios.' });
     }
 
-    // Verificar se o aluno já existe
-    conexao.query('SELECT * FROM alunos WHERE id = ?', [id], (erro, resultados) => {
+    // Verificar se o produto já existe
+    conexao.query('SELECT * FROM produtos WHERE id = ?', [id], (erro, resultados) => {
         if (erro) {
-            console.error('Erro ao verificar aluno existente:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao verificar aluno existente.' });
+            console.error('Erro ao verificar produto existente:', erro.message);
+            return res.status(500).json({ mensagem: 'Erro ao verificar produto existente.' });
         }
         if (resultados.length > 0) {
-            return res.status(409).json({ mensagem: 'ID de aluno já cadastrado.' });
+            return res.status(409).json({ mensagem: 'ID de produto já cadastrado.' });
         }
 
-        const novoAluno = { id, nome, idMatricula };
+        const novoProduto = { id, nome, quantidade, preco, data_adicao };
 
-        // Adiciona o novo aluno à tabela
-        conexao.query('INSERT INTO alunos SET ?', novoAluno, (erro, resultado) => {
+        // Adiciona o novo produto à tabela
+        conexao.query('INSERT INTO produtos SET ?', novoProduto, (erro) => {
             if (erro) {
-                console.error('Erro ao cadastrar aluno:', erro.message);
-                return res.status(500).json({ mensagem: 'Erro ao cadastrar aluno.' });
+                console.error('Erro ao cadastrar produto:', erro.message);
+                return res.status(500).json({ mensagem: 'Erro ao cadastrar produto.' });
             }
-            console.log('Novo aluno adicionado:', novoAluno);
-
-            // Verificar se o curso existe antes de matricular
-            conexao.query('SELECT * FROM cursos WHERE id = ?', [curso_id], (erro, resultados) => {
-                if (erro) {
-                    console.error('Erro ao verificar curso existente:', erro.message);
-                    return res.status(500).json({ mensagem: 'Erro ao verificar curso existente.' });
-                }
-                if (resultados.length === 0) {
-                    return res.status(404).json({ mensagem: 'Curso não encontrado.' });
-                }
-
-                // Agora, vamos cadastrar a matrícula
-                const novaMatricula = { aluno_id: id, curso_id, data_matricula };
-                conexao.query('INSERT INTO matriculas SET ?', novaMatricula, (erro) => {
-                    if (erro) {
-                        console.error('Erro ao cadastrar matrícula:', erro.message);
-                        return res.status(500).json({ mensagem: 'Erro ao cadastrar matrícula.' });
-                    }
-                    res.status(201).json({ mensagem: 'Aluno cadastrado e matriculado com sucesso!', aluno: novoAluno, matricula: novaMatricula });
-                });
-            });
+            console.log('Novo produto adicionado:', novoProduto);
+            res.status(201).json({ mensagem: 'Produto cadastrado com sucesso!', produto: novoProduto });
         });
     });
 });
 
-// Rota GET para retornar todas as matrículas com informações do aluno e do curso
-server.get('/matriculas', (req, res) => {
-    console.log('Consulta de todas as matrículas');
-    const sqlConsultaMatriculas = `
-        SELECT 
-            m.id AS matricula_id,  -- Use 'm.id' para referir-se à matrícula
-            a.nome AS aluno_nome,
-            m.curso_id,  -- Mantendo o curso_id, mas pode ser alterado conforme necessidade
-            c.nome AS curso_nome,
-            m.data_matricula
-        FROM 
-            matriculas m
-        JOIN 
-            alunos a ON m.aluno_id = a.id
-        JOIN 
-            cursos c ON m.curso_id = c.id
-    `;
-    
-    conexao.query(sqlConsultaMatriculas, (erro, resultados) => {
-        if (erro) {
-            console.error('Erro ao consultar matrículas:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao consultar matrículas.' });
-        }
-        
-        // Exibir informações das matrículas no console
-        resultados.forEach((matricula) => {
-            console.log(`Aluno: ${matricula.aluno_nome}, Matrícula: ${matricula.matricula_id}, Curso: ${matricula.curso_nome}, Data da Matrícula: ${matricula.data_matricula}`);
-        });
-        
-        // Retorna os resultados
-        res.json(resultados);
-    });
-});
+// Rota PATCH para atualizar a quantidade de um produto (entrada/saída)
+server.patch('/produtos/:id/quantidade', (req, res) => {
+    const produtoId = req.params.id;
+    const { quantidade } = req.body;
 
-// Rota PATCH para atualizar um aluno existente
-server.patch('/alunos/:id', (req, res) => {
-    const alunoId = req.params.id; // ID do aluno a ser atualizado
-    const { nome, idMatricula } = req.body; // Dados para atualização
-
-    // Verifica se todos os campos são obrigatórios
-    if (!nome || !idMatricula) {
-        return res.status(400).json({ mensagem: 'Nome e ID da matrícula são obrigatórios.' });
+    // Verifica se a quantidade foi informada
+    if (quantidade === undefined) {
+        return res.status(400).json({ mensagem: 'A quantidade é obrigatória.' });
     }
 
-    // Atualiza o aluno no banco de dados
-    const sqlAtualizaAluno = 'UPDATE alunos SET nome = ?, idMatricula = ? WHERE id = ?';
+    // Atualiza a quantidade do produto no banco de dados
+    const sqlAtualizaQuantidade = 'UPDATE produtos SET quantidade = quantidade + ? WHERE id = ?';
 
-    conexao.query(sqlAtualizaAluno, [nome, idMatricula, alunoId], (erro, resultado) => {
+    conexao.query(sqlAtualizaQuantidade, [quantidade, produtoId], (erro, resultado) => {
         if (erro) {
-            console.error('Erro ao atualizar aluno:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao atualizar aluno.' });
+            console.error('Erro ao atualizar quantidade do produto:', erro.message);
+            return res.status(500).json({ mensagem: 'Erro ao atualizar quantidade do produto.' });
         }
         if (resultado.affectedRows === 0) {
-            return res.status(404).json({ mensagem: 'Aluno não encontrado.' });
+            return res.status(404).json({ mensagem: 'Produto não encontrado.' });
         }
-        res.json({ mensagem: 'Aluno atualizado com sucesso!', aluno: { id: alunoId, nome, idMatricula } });
+        res.json({ mensagem: 'Quantidade do produto atualizada com sucesso!' });
     });
 });
 
-// Rota PUT para atualizar um aluno existente
-server.put('/alunos/:id', (req, res) => {
-    const alunoId = req.params.id;
-    const { nome, idMatricula } = req.body;
+// Rota PUT para atualizar as informações de um produto
+server.put('/produtos/:id', (req, res) => {
+    const produtoId = req.params.id;
+    const { nome, preco } = req.body;
 
-    console.log(`Requisição para atualizar o aluno com id ${alunoId}`);
+    console.log(`Requisição para atualizar o produto com id ${produtoId}`);
     console.log('Body da requisição:', req.body);
 
     // Verificação básica
-    if (!nome || !idMatricula) {
-        return res.status(400).json({ mensagem: 'Todos os campos são obrigatórios.' });
+    if (!nome || !preco) {
+        return res.status(400).json({ mensagem: 'Nome e preço são obrigatórios.' });
     }
 
-    // Atualiza o aluno na tabela
-    const atualizarAlunoSql = 'UPDATE alunos SET nome = ?, idMatricula = ? WHERE id = ?';
-    
-    conexao.query(atualizarAlunoSql, [nome, idMatricula, alunoId], (erro, resultado) => {
+    // Atualiza o produto na tabela
+    const atualizarProdutoSql = 'UPDATE produtos SET nome = ?, preco = ? WHERE id = ?';
+
+    conexao.query(atualizarProdutoSql, [nome, preco, produtoId], (erro, resultado) => {
         if (erro) {
-            console.error('Erro ao atualizar aluno:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao atualizar aluno.' });
+            console.error('Erro ao atualizar produto:', erro.message);
+            return res.status(500).json({ mensagem: 'Erro ao atualizar produto.' });
         }
         if (resultado.affectedRows === 0) {
-            return res.status(404).json({ mensagem: 'Aluno não encontrado.' });
+            return res.status(404).json({ mensagem: 'Produto não encontrado.' });
         }
-        res.json({ mensagem: 'Aluno atualizado com sucesso!' });
+        res.json({ mensagem: 'Produto atualizado com sucesso!' });
     });
 });
 
-// Rota DELETE para remover um aluno existente
-server.delete('/alunos/:id', (req, res) => {
-    const alunoId = req.params.id; // ID do aluno a ser removido
+// Rota DELETE para remover um produto do estoque
+server.delete('/produtos/:id', (req, res) => {
+    const produtoId = req.params.id;
 
-    console.log(`Requisição para remover o aluno com id ${alunoId}`);
+    console.log(`Requisição para remover o produto com id ${produtoId}`);
 
-    // Deleta o aluno na tabela
-    const sqlDeletaAluno = 'DELETE FROM alunos WHERE id = ?';
+    const sqlDeletaProduto = 'DELETE FROM produtos WHERE id = ?';
 
-    conexao.query(sqlDeletaAluno, [alunoId], (erro, resultado) => {
+    conexao.query(sqlDeletaProduto, [produtoId], (erro, resultado) => {
         if (erro) {
-            console.error('Erro ao remover aluno:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao remover aluno.' });
+            console.error('Erro ao remover produto:', erro.message);
+            return res.status(500).json({ mensagem: 'Erro ao remover produto.' });
         }
         if (resultado.affectedRows === 0) {
-            return res.status(404).json({ mensagem: 'Aluno não encontrado.' });
+            return res.status(404).json({ mensagem: 'Produto não encontrado.' });
         }
-        res.json({ mensagem: 'Aluno removido com sucesso!' });
-    });
-});
-
-// Rota DELETE para remover um curso existente
-server.delete('/cursos/:id', (req, res) => {
-    const cursoId = req.params.id; // ID do curso a ser removido
-
-    console.log(`Requisição para remover o curso com id ${cursoId}`);
-
-    // Deleta o curso na tabela
-    const sqlDeletaCurso = 'DELETE FROM cursos WHERE id = ?';
-
-    conexao.query(sqlDeletaCurso, [cursoId], (erro, resultado) => {
-        if (erro) {
-            console.error('Erro ao remover curso:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao remover curso.' });
-        }
-        if (resultado.affectedRows === 0) {
-            return res.status(404).json({ mensagem: 'Curso não encontrado.' });
-        }
-        res.json({ mensagem: 'Curso removido com sucesso!' });
+        res.json({ mensagem: 'Produto removido com sucesso!' });
     });
 });
 

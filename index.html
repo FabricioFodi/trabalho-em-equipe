@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,14 +8,16 @@
 <body>
     <h1>Cadastrar Mercados</h1>
 
-    <form>
-        <input type="text" id="nome" name="nome" required>
-        <input type="text" id="endereco" name="endereco" required>
-        <button onclick="cadastrarMercado()">Cadastrar</button>
-        <button onclick="listarMercados()">Listar</button>
+    <form id="input-form">
+        <input type="text" id="nome" name="nome" placeholder="Nome" required>
+        <input type="text" id="endereco" name="endereco" placeholder="Endereço" required>
+        <button id="cadastrarMercado">Cadastrar</button>
+        <button id="listarMercados">Listar</button>
+        
     </form>
 
-    <script>
-    </script>
+    <ul id="listaMercados"></ul>
+
+    <script src="cadastroMercado.js"></script>
 </body>
 </html>

@@ -2,11 +2,18 @@ const form = document.getElementById('input-form');
 const botaoCadastrar = document.getElementById('cadastrarMercado');
 const botaoListar = document.getElementById('listarMercados');
 
+
+//Cadastrar mercado //Método Post
 botaoCadastrar.addEventListener('click', (e) => {
     e.preventDefault();
 
     const nome = form.elements['nome'].value;
     const endereco = form.elements['endereco'].value;
+
+    if (!nome || !endereco) {
+        alert('Nome e endereço são obrigatórios!');
+        return;
+    }
 
     fetch('http://localhost:3000/mercados', {
         method: 'POST',
@@ -17,14 +24,17 @@ botaoCadastrar.addEventListener('click', (e) => {
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('Erro ao cadastrar mercado.');
+                return response.json().then(data => {
+                    alert(data.erro || 'Erro ao cadastrar mercado.');
+                });
             }
             console.log('Mercado cadastrado com sucesso.');
             return response.json();
         })
         .then(data => {
-            console.log(data);
-            form.reset();
+            if (data && data.sucesso) {
+                form.reset();
+            }
         })
         .catch(erro => {
             console.error('Erro ao cadastrar mercado.', erro);
@@ -32,6 +42,7 @@ botaoCadastrar.addEventListener('click', (e) => {
 });
 
 
+//Listar mercados // Método Get
 botaoListar.addEventListener('click', (e) => {
     e.preventDefault();
 
@@ -43,13 +54,15 @@ botaoListar.addEventListener('click', (e) => {
             lista.innerHTML = '';
             mercados.forEach(mercado => {
                 const item = document.createElement('li');
-                const btnExcluir = document.createElement('button');
-                item.textContent = `${mercado.nome} - ${mercado.endereco}`;
                 btnExcluir.textContent = 'Excluir';
+                item.textContent = `${mercado.nome} - ${mercado.endereco} <button id="excluirMercado">Excluir</button>`;
                 lista.appendChild(item);
             });
         }).catch(erro => {
             console.error('Erro ao listar mercados.', erro);
         });
+
+    // Excluir mercado // Método Delete
+    
 });
 

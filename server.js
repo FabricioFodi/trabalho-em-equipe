@@ -31,17 +31,18 @@ app.use(express.static(path.join(__dirname)));
 app.post('/mercados', (req, res) => {
     console.log('Dados recebidos:', req.body);
     const { nome, endereco } = req.body;
-    const query = 'INSERT INTO mercados (nome, endereco) VALUES (?, ?)';
 
+    if (!nome || !endereco) {
+        return res.status(400).json({ erro: 'Nome e endereço são obrigatórios.' });
+    }
+    
+    const query = 'INSERT INTO mercados (nome, endereco) VALUES (?, ?)';
     conexao.query(query, [nome, endereco], (erro, resultado) => {
-        if (!erro){
-            console.log('Mercado cadastrado com sucesso.', resultado);
-            res.status(201).json({id: resultado.insertId, nome, endereco});
-            return;
-        } else {
-            res.status(400).status('Erro ao cadastrar mercado.', erro);
-        }
-    })
+        if (erro){
+            return res.status(500).json({ erro });   
+        } 
+            return res.json({ sucesso: true, mercado_id: resultado.insertId });
+    });
 });
 
 app.get('/mercados', (req, res) => {
@@ -53,8 +54,22 @@ app.get('/mercados', (req, res) => {
             res.status(200).json(resultado);
             return;
         } else {
-            res.status(400).status('Erro ao listar mercados.', erro);
+            res.status(400).json({erro: 'Erro ao listar mercados.', detalhe: erro});
         }
+    })
+});
+
+app.get('/mercados/:id', (req, res) => {
+    const { id }= req.params;
+    const query = 'SELECT nome, endereco FROM mercados WHERE id = ?';
+
+    conexao.query(query, [id], (erro, resultado) => {
+        if(!erro) {
+            console.log('Mercado encontrado com sucesso.', resultado);
+            res.status(200).json(resultado[0]);
+            return;
+        }
+        res.status(400).json({erro: 'Erro ao buscar mercado pelo id.', detalhe: erro});
     })
 });
 
@@ -68,7 +83,7 @@ app.delete('/mercados/:id', (req, res) => {
             res.status(200).json(resultado);
             return;
         } else {
-            res.status(400).status('Erro ao deletar mercado.', erro);
+            res.status(400).json({erro: 'Erro ao deletar mercado.', detalhe: erro});
         }
     })
 });

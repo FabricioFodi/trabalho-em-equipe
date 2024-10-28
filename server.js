@@ -106,18 +106,32 @@ app.put('/mercados/:id', (req, res) => {
 
 //Método post para cadastrar produtos em um mercado
 app.post('/mercados/:id/produtos', (req, res) => {
-    const { id } =req.params;
+    const { id } = req.params;
     const { nome, descricao, preco, quantidade } = req.body;
     const query = 'INSERT INTO produtos (nome, descricao, preco, quantidade, mercado_id) VALUES (?, ?, ?, ?, ?)';
 
     conexao.query(query, [nome, descricao, preco, quantidade, id], (erro, resultados) => {
         if(!erro){
-            res.status(201).json({sucesso: true, id: resultados.insertId});
+            return res.status(201).json({sucesso: true, id: resultados.insertId});
         }
         res.status(400).json({erro: 'Erro ao cadastrar produto.', detalhe: erro});
 
-    })
-})
+    });
+});
+
+//Método GET para listar produtos de um mercado
+app.get('/mercados/:id/produtos', (req, res) => {
+    const { id } = req.params;
+    const query = 'SELECT * FROM produtos WHERE mercado_id = ?';
+
+    conexao.query(query, [id], (erro, resultados) => {
+        if(!erro){
+            res.status(200).json(resultados);
+            return;
+        }
+        res.status(400).json({erro: 'Erro ao listar produtos do mercados.', detalhe: erro});
+    });
+});
 
 
 // Iniciar o servidor

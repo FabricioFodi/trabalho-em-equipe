@@ -65,13 +65,17 @@ botaoListarProdutos.addEventListener('click', (e) => {
         return response.json();
     })
     .then(produtos => {
-        if(!produtos)
+        if(!produtos){
+            alert('Nenhum produto encontrado.');
+            return;
+        }
+
         const listaProdutos = document.getElementById('listaProdutos');
         listaProdutos.innerHTML = '';
 
         produtos.forEach(produto => {
             const item = document.createElement('li');
-            item.textContent = `${produto.nome} - ${produto.descricao} - ${produto.preco} - ${produto.quantidade}`;
+            item.textContent = `${produto.nome} - ${produto.descricao} - R$ ${produto.preco} - Qtd: ${produto.quantidade}`;
             listaProdutos.appendChild(item);
         })
     })

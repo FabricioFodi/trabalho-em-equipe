@@ -27,7 +27,7 @@ conexao.connect((erro) => {
 // Servir arquivos estáticos da raiz do projeto
 app.use(express.static(path.join(__dirname)));
 
-
+//Método post para cadastrar mercados
 app.post('/mercados', (req, res) => {
     console.log('Dados recebidos:', req.body);
     const { nome, endereco } = req.body;
@@ -41,12 +41,13 @@ app.post('/mercados', (req, res) => {
         if (erro){
             return res.status(500).json({ erro });   
         } 
-            return res.json({ sucesso: true, mercado_id: resultado.insertId });
+            return res.json({ sucesso: true, id: resultado.insertId });
     });
 });
 
+//Método get para listar mercados
 app.get('/mercados', (req, res) => {
-    const query = 'SELECT nome, endereco FROM mercados';
+    const query = 'SELECT * FROM mercados';
 
     conexao.query(query, (erro, resultado) => {
         if(!erro){
@@ -59,6 +60,21 @@ app.get('/mercados', (req, res) => {
     })
 });
 
+//Método delete para exclur mercado
+app.delete('/mercados/:id', (req, res) => {
+    const { id } = req.params;
+    const query = 'DELETE FROM mercados WHERE id = ?';
+
+    conexao.query(query, [id], (erro, resultado) => {
+        if(!erro){
+            res.status(200).json({sucesso: true, mensagem: 'Mercado deletado com sucesso.'});
+        } else {
+            res.status(400).json({erro: 'Erro ao deletar mercado.', detalhe: erro});
+        }
+    })
+});
+
+//Método get para buscar mercado pelo id
 app.get('/mercados/:id', (req, res) => {
     const { id }= req.params;
     const query = 'SELECT nome, endereco FROM mercados WHERE id = ?';
@@ -73,20 +89,36 @@ app.get('/mercados/:id', (req, res) => {
     })
 });
 
-app.delete('/mercados/:id', (req, res) => {
+//Método put para atualizar mercado
+app.put('/mercados/:id', (req, res) => {
     const { id } = req.params;
-    const query = 'DELETE FROM mercados WHERE id = ?';
+    const { nome, endereco } = req.body;
+    const query = 'UPDATE mercados SET nome = ?, endereco = ? WHERE id = ?';
 
-    conexao.query(query, [id], (erro, resultado) => {
+    conexao.query(query, [nome, endereco, id], (erro, resultado) => {
         if(!erro){
-            console.log('Mercado deletado com sucesso.', resultado);
-            res.status(200).json(resultado);
+            res.status(200).json({sucesso: true, mensagem: 'Mercado atualizado com sucesso.'});
             return;
-        } else {
-            res.status(400).json({erro: 'Erro ao deletar mercado.', detalhe: erro});
         }
+        res.status(400).json({erro: 'Erro ao atualizar mercado.', detalhe: erro});
     })
 });
+
+//Método post para cadastrar produtos em um mercado
+app.post('/mercados/:id/produtos', (req, res) => {
+    const { id } =req.params;
+    const { nome, descricao, preco, quantidade } = req.body;
+    const query = 'INSERT INTO produtos (nome, descricao, preco, quantidade, mercado_id) VALUES (?, ?, ?, ?, ?)';
+
+    conexao.query(query, [nome, descricao, preco, quantidade, id], (erro, resultados) => {
+        if(!erro){
+            res.status(201).json({sucesso: true, id: resultados.insertId});
+        }
+        res.status(400).json({erro: 'Erro ao cadastrar produto.', detalhe: erro});
+
+    })
+})
+
 
 // Iniciar o servidor
 app.listen(PORT, () => {

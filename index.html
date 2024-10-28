@@ -6,8 +6,8 @@
     <title>Mercados</title>
 </head>
 <body>
+    <!--Cadastrar Mercados-->
     <h1>Cadastrar Mercados</h1>
-
     <form id="input-form">
         <input type="text" id="nome" name="nome" placeholder="Nome" required>
         <input type="text" id="endereco" name="endereco" placeholder="Endereço" required>
@@ -17,11 +17,40 @@
     </form>
 
     <ul id="listaMercados"></ul>
+    <!--Fim Cadastrar Mercados-->
 
-    <input type="text" id="buscarId" nome="buscarPorId" placeholder="Buscar Merdado pelo ID">
+    <!--Buscar Mercados pelo ID-->
+    <h1>Buscar mercado por ID</h1>
+    <input type="text" id="buscarId" nome="buscarPorId" placeholder="Buscar Merdado pelo ID" required>
     <button id="buscarMercado">Buscar</button>
     <ul id="ProcurarMercado"></ul>
+    <!--Fim Buscar Mercados pelo ID-->
+
+    <!--Atualizar Mercado-->
+    <h1>Atualizar Mercado</h1>
+    <form id="formAtualizarMercado">
+        <input type="number" name="id" placeholder="Informe o ID do mercado" required>
+        <input type="text" name="nomeMercado" placeholder="Informe o Novo nome para o mercado" required>
+        <input type="text" name="enderecoMercado" placeholder="Informe o novo endereço" required>
+        <button id="BotaoAtualizar">Atualizar</button>
+    </form>
+    <!--Fim Atualizar Mercado -->
+
+    <!--Criar um Produto para um mercado-->
+    <h1>Criar um Produto para um mercado</h1>
+    <form id="formProduto">
+        <input type="text" placeholder="ID do mercado" name="IDMercado" required>
+        <input type="text" placeholder="Nome do produto" name="nomeProduto" required>
+        <input type="text" placeholder="Descrição" name="descricaoProduto" required>
+        <input type="text" placeholder="Preço" name="precoProduto" required>
+        <input type="text" placeholder="Quantidade" name="qtdProduto" required>
+        <button id="botaoCriar">Criar Produto</button>
+    </form>
+
 
     <script src="cadastroMercado.js"></script>
+    <script src="buscarPeloID.js"></script>
+    <script src="atualizarMercado.js"></script>
+    <script src="criarProduto.js"></script>
 </body>
 </html>

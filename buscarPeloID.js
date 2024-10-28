@@ -1,29 +1,32 @@
 const btnBuscar = document.getElementById('buscarMercado');
 const input = document.getElementById('buscarId');
 
-
-
 // Faz uma busca do mercado pelo ID //Método Get
 btnBuscar.addEventListener('click', (e) => {
     e.preventDefault();
     const id = input.value;
 
+    // Verifica se o ID foi preenchido
     if (!id) {
-        alert('ID não pode ser vazio!');
+        alert('Por favor, insira um ID para buscar.');
         return;
     }
 
-    fetch(`http://localhost:300/mercado_id/${id}`)
-    .then(response => response.json())
-    .then(mercados => {
-        console.log(mercados);
-        const listaId = document.getElementById('ProcurarMercado');
-        listaId.innerHTML = '';
-        const item = document.createElement('li');
-        item.textContent = `${mercados.nome} - ${mercados.endereco}`;
-        listaId.appendChild(item);
-    })
-    .catch(erro => {
-        console.error('Erro ao buscar mercado.', erro);
-    });
+    fetch(`http://localhost:3000/mercados/${id}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Erro ao buscar mercado pelo ID.');
+            return response.json();
+        })
+        .then(mercado => {
+            const listaId = document.getElementById('ProcurarMercado');
+            listaId.innerHTML = '';
+
+            const item = document.createElement('li');
+            item.textContent = `${mercado.nome} - ${mercado.endereco}`;
+            listaId.appendChild(item);
+        })
+        .catch(erro => {
+            alert(erro.message === 'Erro ao buscar mercado pelo ID.' ? erro.message : 'Mercado não encontrado!');
+            console.error('Erro ao buscar mercado:', erro);
+        });
 });

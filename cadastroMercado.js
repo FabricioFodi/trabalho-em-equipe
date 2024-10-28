@@ -33,6 +33,7 @@ botaoCadastrar.addEventListener('click', (e) => {
         })
         .then(data => {
             if (data && data.sucesso) {
+                console.log('ID do mercado cadastrado:', data.id);
                 form.reset();
             }
         })
@@ -42,7 +43,7 @@ botaoCadastrar.addEventListener('click', (e) => {
 });
 
 
-//Listar mercados // Método Get
+// Listar mercados // Método GET
 botaoListar.addEventListener('click', (e) => {
     e.preventDefault();
 
@@ -52,17 +53,45 @@ botaoListar.addEventListener('click', (e) => {
             console.log(mercados);
             const lista = document.getElementById('listaMercados');
             lista.innerHTML = '';
+
             mercados.forEach(mercado => {
                 const item = document.createElement('li');
+                item.innerHTML = `${mercado.nome} - ${mercado.endereco}`;
+
+                const btnExcluir = document.createElement('button');
                 btnExcluir.textContent = 'Excluir';
-                item.textContent = `${mercado.nome} - ${mercado.endereco} <button id="excluirMercado">Excluir</button>`;
+
+                // Passando o ID correto do mercado para a função excluirMercado
+                btnExcluir.addEventListener('click', () => {
+                    excluirMercado(mercado.id);
+                });
+
+                item.appendChild(btnExcluir);
                 lista.appendChild(item);
             });
         }).catch(erro => {
             console.error('Erro ao listar mercados.', erro);
         });
-
-    // Excluir mercado // Método Delete
-    
 });
+function excluirMercado(id) {
+    console.log('ID do mercado a ser excluído:', id);
 
+    fetch(`http://localhost:3000/mercados/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    alert(data.erro || 'Erro ao excluir mercado.');
+                });
+            }
+            console.log('Mercado excluído com sucesso.');
+            botaoListar.click();
+        })
+        .catch(erro => {
+            console.error('Erro ao excluir mercado.', erro);
+        });
+};

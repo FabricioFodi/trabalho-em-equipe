@@ -23,13 +23,15 @@ botaoProcurar.addEventListener('click', (e) => {
         return response.json();
     })
     .then(data => {
-        if(data && data.sucesso){
+        if(data && data.sucesso && data.produto){
             ulProdutos.innerHTML = '';
             const li = document.createElement('li');
             li.textContent = `Nome: ${data.produto.nome} | Descrição: ${data.produto.descricao} | Preço: ${data.produto.preco} | Quantidade: ${data.produto.quantidade}`;
             ulProdutos.appendChild(li);
+        } else {
+            alert('Produto não encontrado!');
         }
-    })
+        })
     .catch(erro => {
         alert(erro.message === 'Erro ao buscar produto pelo ID.' ? erro.message : 'Produto não encontrado!');
         console.error('Erro ao buscar produto:', erro);

@@ -1,4 +1,4 @@
-const formDeletar = document.getElementById('DeletarProduto');
+const formDeletar = document.getElementById('deletarProduto');
 const botaoDeletar = document.getElementById('botaoDeletarProduto');
 
 botaoDeletar.addEventListener('click', (e) => {
@@ -12,7 +12,7 @@ botaoDeletar.addEventListener('click', (e) => {
         return;
     }
 
-    fetch(`http://locahost:3000/mercados/${idMercadoDelete}/produtos/${idProdutoDelete}`, {
+    fetch(`http://localhost:3000/mercados/${idMercadoDelete}/produtos/${idProdutoDelete}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json'
@@ -29,6 +29,7 @@ botaoDeletar.addEventListener('click', (e) => {
     })
     .then(data => {
         if(data && data.sucesso){
+            alert('Produto deletado com sucesso.');
             console.log('Produto deletado com sucesso.');
             form.reset();
         }

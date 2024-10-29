@@ -59,7 +59,7 @@ botaoListarProdutos.addEventListener('click', (e) => {
     .then(response => {
         if(!response.ok){
             return response.json().then(data => {
-                alert(data.erro || 'Erro ao buscar produtos.');
+                alert(data.erro || 'Erro ao criar produtos.');
             })
         }
         return response.json();

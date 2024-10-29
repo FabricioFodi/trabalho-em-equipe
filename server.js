@@ -52,11 +52,9 @@ app.get('/mercados', (req, res) => {
     conexao.query(query, (erro, resultado) => {
         if(!erro){
             console.log('Mercados listados com sucesso.');
-            res.status(200).json(resultado);
-            return;
-        } else {
+            return res.status(200).json(resultado); 
+        } 
             res.status(400).json({erro: 'Erro ao listar mercados.', detalhe: erro});
-        }
     })
 });
 
@@ -67,10 +65,9 @@ app.delete('/mercados/:id', (req, res) => {
 
     conexao.query(query, [id], (erro, resultado) => {
         if(!erro){
-            res.status(200).json({sucesso: true, mensagem: 'Mercado deletado com sucesso.'});
-        } else {
+            return res.status(200).json({sucesso: true, mensagem: 'Mercado deletado com sucesso.'});
+        } 
             res.status(400).json({erro: 'Erro ao deletar mercado.', detalhe: erro});
-        }
     })
 });
 
@@ -82,8 +79,7 @@ app.get('/mercados/:id', (req, res) => {
     conexao.query(query, [id], (erro, resultado) => {
         if(!erro) {
             console.log('Mercado encontrado com sucesso.', resultado);
-            res.status(200).json(resultado[0]);
-            return;
+            return res.status(200).json(resultado[0]);
         }
         res.status(400).json({erro: 'Erro ao buscar mercado pelo id.', detalhe: erro});
     })
@@ -97,8 +93,7 @@ app.put('/mercados/:id', (req, res) => {
 
     conexao.query(query, [nome, endereco, id], (erro, resultado) => {
         if(!erro){
-            res.status(200).json({sucesso: true, mensagem: 'Mercado atualizado com sucesso.'});
-            return;
+            return res.status(200).json({sucesso: true, mensagem: 'Mercado atualizado com sucesso.'});    
         }
         res.status(400).json({erro: 'Erro ao atualizar mercado.', detalhe: erro});
     })
@@ -126,10 +121,49 @@ app.get('/mercados/:id/produtos', (req, res) => {
 
     conexao.query(query, [id], (erro, resultados) => {
         if(!erro){
-            res.status(200).json(resultados);
-            return;
+            return res.status(200).json(resultados);    
         }
         res.status(400).json({erro: 'Erro ao listar produtos do mercados.', detalhe: erro});
+    });
+});
+
+//Método GET para buscar o id do produto pelo id do mercado
+app.get('/mercados/:id/produtos/:produtoId', (req, res) => {
+    const { id, produtoId } = req.params;
+    const query = 'SELECT * FROM produtos WHERE mercado_id = ? AND id = ?';
+
+    conexao.query(query, [id, produtoId], (erro, resultados) => {
+        if(!erro){
+            return res.status(200).json({sucesso: true, produto: resultados[0]});
+        }
+        res.status(400).json({erro: 'Erro ao buscar produto pelo ID.', detalhe: erro});
+    });
+});
+
+//Método PUT para atualizar produto específico
+app.put('/mercados/:id/produtos/:produtoId', (req, res) => {
+    const { id, produtoId } = req.params;
+    const { nome, descricao, preco, quantidade } = req.body;
+    const query = 'UPDATE produtos SET nome = ?, descricao = ?, preco = ?, quantidade = ? WHERE mercado_id = ? AND id = ?';
+
+    conexao.query(query, [nome, descricao, preco, quantidade, id, produtoId], (erro, resultados) => {
+        if(!erro){
+            return res.status(200).json({sucesso: true, mensagem: 'Produto atualizado com sucesso.'});
+        }
+        res.status(400).json({erro: 'Erro ao atualizar produto.', detalhe: erro});
+    });
+});
+
+//Método DELETE para deletar produto específico
+app.delete('/mercados/:id/produtos/:produtoId', (req, res) => {
+    const { id, produtoId } = req.params;
+    const query = 'DELETE FROM produtos WHERE mercado_id = ? AND id = ?';
+
+    conexao.query(query, [id, produtoId], (erro, resultados) => {
+        if(!erro){
+            return res.status(200).json({sucesso: true, mensagem: 'Produto deletado com sucesso.'});
+        }
+        res.status(400).json({erro: 'Erro ao deletar produto.', detalhe: erro});
     });
 });
 

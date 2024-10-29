@@ -18,5 +18,10 @@ create table produtos (
     FOREIGN KEY (mercado_id) REFERENCES mercados(id)
 );
 
+insert into mercados (nome, endereco) values ('Mercado do João', 'Rua das Flores, 123');
+insert into mercados (nome, endereco) values ('Mercado da Maria', 'Rua das Rosas, 456');
+
+insert into produtos (nome, descricao, preco, quantidade, mercado_id) values ('Arroz', 'Arroz tipo 1', 10.00, 100, 1);
+
 select * from mercados;
 select * from produtos;

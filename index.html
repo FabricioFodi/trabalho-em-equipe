@@ -52,15 +52,45 @@
 
 
     <!--Buscar Produto específico-->
-    <form id="form-Mercado-Produto">
-        <input type="text" name="IdDoMercado" placeholder="Insira o ID do Mercado" required>
-        <input type="text" name="IdDoProduto" placeholder="Insira o ID do Produto" required>
+    <h1>Buscar Produto pelo ID</h1>
+    <form id="formMercadoProduto">
+        <input type="number" name="IdDoMercado" placeholder="Insira o ID do Mercado" required>
+        <input type="number" name="IdDoProduto" placeholder="Insira o ID do Produto" required>
         <button id="listarOsProdutos">Buscar</button>
     </form>
+    <ul id="listaProdutosEspecificos"></ul>
+    <!--Fim Buscar Produto específico-->
+
+
+    <!--Atualizar Produto-->
+    <h1>Atualizar Produto</h1>
+    <form id="atualizarProdutoEspecifico">
+        <input type="number" name="idMercado" placeholder="Informe o ID do mercado" required>
+        <input type="number" name="idProduto" placeholder="Informe o ID do produto" required>
+        <input type="text" name="nomeProduto" placeholder="Informe o Novo nome para o produto" required>
+        <input type="text" name="descricaoProduto" placeholder="Informe a nova descrição" required>
+        <input type="text" name="precoProduto" placeholder="Informe o novo preço" required>
+        <input type="text" name="qtdProduto" placeholder="Informe a nova quantidade" required>
+        <button id="botaoAtualizarProduto">Atualizar</button>
+    </form>
+    <!--Fim Atualizar Produto-->
+
+    <!--Deletar Produto-->
+    <h1>Deletar Produto</h1>
+    <form id="deletarProduto">
+        <input type="number" name="idMercadoDelete" placeholder="Informe o ID do mercado" required>
+        <input type="number" name="idProdutoDelete" placeholder="Informe o ID do produto" required>
+        <button id="botaoDeletarProduto">Deletar</button>
+    </form>
+    <ul id="ListaDelete"></ul>
+    <!--Fim Deletar Produto-->
 
     <script src="cadastroMercado.js"></script>
     <script src="buscarPeloID.js"></script>
     <script src="atualizarMercado.js"></script>
     <script src="criarProduto.js"></script>
+    <script src="buscarProduto.js"></script>
+    <script src="atualizarProduto.js"></script>
+    <script src="deletarProduto.js"></script>
 </body>
 </html>

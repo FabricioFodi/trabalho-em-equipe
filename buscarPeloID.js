@@ -14,7 +14,11 @@ btnBuscar.addEventListener('click', (e) => {
 
     fetch(`http://localhost:3000/mercados/${id}`)
         .then(response => {
-            if (!response.ok) throw new Error('Erro ao buscar mercado pelo ID.');
+            if(!response.ok){
+                return response.json().then(data => {
+                    alert(data.erro || 'Erro ao buscar Mercado.')
+                })
+            }
             return response.json();
         })
         .then(mercado => {

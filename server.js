@@ -167,6 +167,33 @@ app.delete('/mercados/:id/produtos/:produtoId', (req, res) => {
     });
 });
 
+//Método POST para cadastrar movimentação de estoque
+app.post('/mercados/:id/produtos/:produtoId/movimentacoes', (req, res) => {
+    const { id, produtoId } = req.params;
+    const { quantidadeMovimentacao, tipoMovimentacao } = req.body;
+    const query = 'INSERT INTO movimentacoes (quantidade, tipo, produto_id) VALUES (?, ?, ?)';
+
+    conexao.query(qurey, [quantidadeMovimentacao, tipoMovimentacao, produtoId], (erro, resultados) => {
+        if(!erro){
+            return res.status(201).json({sucesso: true, id: resultados.insertId });
+        }
+        res.status(400).json({erro: 'Erro ao cadastrar movimentações.', detalhe: erro});
+    });
+});
+
+//Método GET para listar movimentações de um produto
+app.get('/mercados/:id/produtos/:produtoId/movimentacoes', (req, res) => {
+    const { id, produtoId } = req.params;
+    const query = 'SELECT * FROM movimentacoes WHERE produto_id = ?';
+
+    conexao.query(query, [produtoId, id], (erro, resultados) => {
+        if(!erro){
+            return res.status(200).json(resultados);
+        }
+        res.status(400).json({erro: 'Erro ao listar movimentações.', detalhe: erro});
+    });
+});
+
 
 // Iniciar o servidor
 app.listen(PORT, () => {

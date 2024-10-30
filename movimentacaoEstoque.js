@@ -18,4 +18,22 @@ botaoSalvarMovimentacao.addEventListener('click', (e) => {
         },
         body: JSON.stringify({ idLoja, idProduct, tipoMovimentacao, quantidadeMovimentacao})
     })
-})
+    .then(response => {
+        if(!response.ok){
+            return response.json().then(data => {
+                alert(data.erro || 'Erro ao cadastrar movimentação.');
+            });
+        }
+        console.log('Movimentação cadastrada com sucesso.');
+        return response.json();
+    })
+    .then(data => {
+        if(data && data.sucesso){
+            console.log('ID da movimentação cadastrada:', data.id);
+            formMovimentacaoEstoque.reset();
+        }
+    })
+    .catch(erro => {
+        console.error('Erro ao cadastrar movimentação.', erro);
+    });
+});

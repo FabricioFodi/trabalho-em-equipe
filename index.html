@@ -84,6 +84,22 @@
     </form>
     <!--Fim Deletar Produto-->
 
+    <!--Movimentação de Estoque-->
+    <h1>Movimentação de Estoque</h1>
+    <form id="formMovimentacao">
+        <input type="number" placeholder="ID do Mercado" name="idLoja" required>
+        <input type="number" placeholder="ID do Produto" name="idProduct" required>
+        <select name="tipoMovimentacao" id="movimentacao">
+            <option value="" disabled selected hidden>Selecione a Movimentação...</option>
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+        </select>
+        <input type="number" placeholder="Quantidade" name="quantidadeMovimentacao" required>
+        <button id="botaoMovimentacao">Movimentar</button>
+        <button id="listarMovimentacoes">Listar</button>
+    </form>
+    <ul id="listaMovimentacoes"></ul>
+
     <script src="cadastroMercado.js"></script>
     <script src="buscarPeloID.js"></script>
     <script src="atualizarMercado.js"></script>
@@ -91,5 +107,6 @@
     <script src="buscarProduto.js"></script>
     <script src="atualizarProduto.js"></script>
     <script src="deletarProduto.js"></script>
+    <script src="movimentacaoEstoque.js"></script>
 </body>
 </html>

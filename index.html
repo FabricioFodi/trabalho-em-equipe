@@ -37,7 +37,7 @@
     <!--Fim Atualizar Mercado -->
 
     <!--Criar um Produto para um mercado-->
-    <h1>Criar um Produto para um mercado</h1>
+    <h1>Criar um Produto para um mercado / Listar todos os produtos de uma loja</h1>
     <form id="formProduto">
         <input type="text" placeholder="ID do mercado" name="IDMercado" required>
         <input type="text" placeholder="Nome do produto" name="nomeProduto" required>
@@ -97,8 +97,13 @@
         <input type="number" placeholder="Quantidade" name="quantidadeMovimentacao" required>
         <button id="botaoMovimentacao">Movimentar</button>
         <button id="listarMovimentacoes">Listar</button>
+        <input type="number" placeholder="ID da Movimentação(só preencha caso for deletar" name="idMovimentacao">
+        <button id="deletarMovimentacao">Deletar</button>
     </form>
     <ul id="listaMovimentacoes"></ul>
+    <!--Fim Movimentação de Estoque-->
+
+
 
     <script src="cadastroMercado.js"></script>
     <script src="buscarPeloID.js"></script>

@@ -28,13 +28,18 @@ botaoDeletar.addEventListener('click', (e) => {
         return response.json();
     })
     .then(data => {
-        if(data && data.sucesso){
+        if(data && data.sucesso === true){
             alert('Produto deletado com sucesso.');
             console.log('Produto deletado com sucesso.');
             form.reset();
+        } else {
+            if(data.status === 404){
+                alert(data.erro);
+            }
         }
     })
     .catch(erro => {
+
         console.error('Erro ao deletar produto.', erro);
     });
 });

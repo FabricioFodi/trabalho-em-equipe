@@ -1,227 +1,251 @@
 const express = require('express');
-const cors = require('cors'); // Corrigido o nome do módulo
-const server = express();
-const conexao = require('./bancodados'); // Corrigido o caminho do módulo
+const mysql = require('mysql2');
+const path = require('path');
 
-// Middleware para tratar JSON
-server.use(express.json());
-server.use(cors()); // Corrigido o nome do middleware
+const app = express();
+const PORT = 3000;
 
-// Rota GET para retornar a mensagem inicial e informar como acessar a API
-server.get('/', (req, res) => {
-    console.log('Rota GET inicial');
-    res.json({ mensagem: 'Acesse a API através de http://localhost:3000/alunos ou http://localhost:3000/cursos' });
+// Middleware para analisar JSON
+app.use(express.json());
+
+// Conexão com o banco de dados
+const conexao = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'root',
+    database: 'mercado_db'
 });
 
-// Rota GET para retornar todos os alunos
-server.get('/alunos', (req, res) => {
-    console.log('Consulta de todos os alunos');
-    conexao.query('SELECT * FROM alunos', (erro, resultados) => {
-        if (erro) {
-            console.error('Erro ao consultar alunos:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao consultar alunos.' });
-        }
-        res.json(resultados);
-    });
-});
-
-// Rota GET para retornar todos os cursos
-server.get('/cursos', (req, res) => {
-    console.log('Consulta de todos os cursos');
-    conexao.query('SELECT * FROM cursos', (erro, resultados) => {
-        if (erro) {
-            return res.status(500).json({ mensagem: 'Erro ao consultar cursos.' });
-        }
-        res.json(resultados);
-    });
-});
-
-// Rota POST para adicionar um novo aluno e matriculá-lo
-server.post('/alunos', (req, res) => {
-    console.log('Requisição para cadastro de aluno');
-    console.log('Body da requisição:', req.body);
-
-    const { id, nome, idMatricula, curso_id, data_matricula } = req.body;
-
-    // Verificação básica
-    if (!id || !nome || !idMatricula || !curso_id || !data_matricula) {
-        return res.status(400).json({ mensagem: 'Todos os campos são obrigatórios.' });
+conexao.connect((erro) => {
+    if (!erro) {
+        console.log('Conectado ao banco de dados.');
+        return;
     }
+    console.log('Erro ao conectar no banco de dados.', erro);
+});
 
-    // Verificar se o aluno já existe
-    conexao.query('SELECT * FROM alunos WHERE id = ?', [id], (erro, resultados) => {
+// Servir arquivos estáticos da raiz do projeto
+app.use(express.static(path.join(__dirname)));
+
+//Método post para cadastrar mercados
+app.post('/mercados', (req, res) => {
+    console.log('Dados recebidos:', req.body);
+    const { nome, endereco } = req.body;
+
+    if (!nome || !endereco) {
+        return res.status(400).json({ erro: 'Nome e endereço são obrigatórios.' });
+    }
+    
+    const query = 'INSERT INTO mercados (nome, endereco) VALUES (?, ?)';
+    conexao.query(query, [nome, endereco], (erro, resultado) => {
+        if (erro){
+            return res.status(500).json({ erro });   
+        } 
+            return res.json({ sucesso: true, id: resultado.insertId });
+    });
+});
+
+//Método get para listar mercados
+app.get('/mercados', (req, res) => {
+    const query = 'SELECT * FROM mercados';
+
+    conexao.query(query, (erro, resultado) => {
+        if(!erro){
+            console.log('Mercados listados com sucesso.');
+            return res.status(200).json(resultado); 
+        } 
+            res.status(400).json({erro: 'Erro ao listar mercados.', detalhe: erro});
+    })
+});
+
+//Método delete para exclur mercado
+app.delete('/mercados/:id', (req, res) => {
+    const { id } = req.params;
+    const query = 'DELETE FROM mercados WHERE id = ?';
+
+    conexao.query(query, [id], (erro, resultado) => {
+        if(!erro){
+            return res.status(200).json({sucesso: true, mensagem: 'Mercado deletado com sucesso.'});
+        } 
+            res.status(400).json({erro: 'Erro ao deletar mercado.', detalhe: erro});
+    })
+});
+
+//Método get para buscar mercado pelo id
+app.get('/mercados/:id', (req, res) => {
+    const { id }= req.params;
+    const query = 'SELECT nome, endereco FROM mercados WHERE id = ?';
+
+    conexao.query(query, [id], (erro, resultado) => {
+        if(!erro) {
+            console.log('Mercado encontrado com sucesso.', resultado);
+            return res.status(200).json(resultado[0]);
+        }
+        res.status(400).json({erro: 'Erro ao buscar mercado pelo id.', detalhe: erro});
+    })
+});
+
+//Método put para atualizar mercado
+app.put('/mercados/:id', (req, res) => {
+    const { id } = req.params;
+    const { nome, endereco } = req.body;
+    const query = 'UPDATE mercados SET nome = ?, endereco = ? WHERE id = ?';
+
+    conexao.query(query, [nome, endereco, id], (erro, resultado) => {
+        if(!erro){
+            return res.status(200).json({sucesso: true, mensagem: 'Mercado atualizado com sucesso.'});    
+        }
+        res.status(400).json({erro: 'Erro ao atualizar mercado.', detalhe: erro});
+    })
+});
+
+//Método post para cadastrar produtos em um mercado
+app.post('/mercados/:id/produtos', (req, res) => {
+    const { id } = req.params;
+    const { nome, descricao, preco, quantidade } = req.body;
+    const query = 'INSERT INTO produtos (nome, descricao, preco, quantidade, mercado_id) VALUES (?, ?, ?, ?, ?)';
+
+    conexao.query(query, [nome, descricao, preco, quantidade, id], (erro, resultados) => {
+        if(!erro){
+            return res.status(201).json({sucesso: true, id: resultados.insertId});
+        }
+        res.status(400).json({erro: 'Erro ao cadastrar produto.', detalhe: erro});
+
+    });
+});
+
+//Método GET para listar produtos de um mercado
+app.get('/mercados/:id/produtos', (req, res) => {
+    const { id } = req.params;
+    const query = 'SELECT * FROM produtos WHERE mercado_id = ?';
+
+    conexao.query(query, [id], (erro, resultados) => {
+        if(!erro){
+            return res.status(200).json(resultados);    
+        }
+        res.status(400).json({erro: 'Erro ao listar produtos do mercados.', detalhe: erro});
+    });
+});
+
+//Método GET para buscar o id do produto pelo id do mercado
+app.get('/mercados/:id/produtos/:produtoId', (req, res) => {
+    const { id, produtoId } = req.params;
+    const query = 'SELECT * FROM produtos WHERE mercado_id = ? AND id = ?';
+
+    conexao.query(query, [id, produtoId], (erro, resultados) => {
+        if(!erro){
+            return res.status(200).json({sucesso: true, produto: resultados[0]});
+        }
+        res.status(400).json({erro: 'Erro ao buscar produto pelo ID.', detalhe: erro});
+    });
+});
+
+//Método PUT para atualizar produto específico
+app.put('/mercados/:id/produtos/:produtoId', (req, res) => {
+    const { id, produtoId } = req.params;
+    const { nome, descricao, preco, quantidade } = req.body;
+    const query = 'UPDATE produtos SET nome = ?, descricao = ?, preco = ?, quantidade = ? WHERE mercado_id = ? AND id = ?';
+
+    conexao.query(query, [nome, descricao, preco, quantidade, id, produtoId], (erro, resultados) => {
+        if(!erro){
+            return res.status(200).json({sucesso: true, mensagem: 'Produto atualizado com sucesso.'});
+        }
+        res.status(400).json({erro: 'Erro ao atualizar produto.', detalhe: erro});
+    });
+});
+
+//Método DELETE para deletar produto específico
+app.delete('/mercados/:id/produtos/:produtoId', (req, res) => {
+    const { id, produtoId } = req.params;
+    const query = 'DELETE FROM produtos WHERE mercado_id = ? AND id = ?';
+
+    conexao.query(query, [id, produtoId], (erro, resultados) => {
         if (erro) {
-            console.error('Erro ao verificar aluno existente:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao verificar aluno existente.' });
+            return res.status(400).json({ erro: 'Erro ao deletar produto.', detalhe: erro });
         }
-        if (resultados.length > 0) {
-            return res.status(409).json({ mensagem: 'ID de aluno já cadastrado.' });
+        
+        if (resultados.affectedRows === 0) {
+            return res.status(404).json({ erro: 'Produto não encontrado.' });
         }
 
-        const novoAluno = { id, nome, idMatricula };
+        res.status(200).json({ sucesso: true, mensagem: 'Produto deletado com sucesso.' });
+    });
+});
+//Método POST para cadastrar movimentação de estoque
+app.post('/mercados/:id/produtos/:produtoId/movimentacoes', (req, res) => {
+    const { id, produtoId } = req.params;
+    const { tipoMovimentacao, quantidadeMovimentacao } = req.body;
+    const query = 'INSERT INTO movimentacoes (tipo, quantidade, produto_id) VALUES (?, ?, ?)';
 
-        // Adiciona o novo aluno à tabela
-        conexao.query('INSERT INTO alunos SET ?', novoAluno, (erro, resultado) => {
-            if (erro) {
-                console.error('Erro ao cadastrar aluno:', erro.message);
-                return res.status(500).json({ mensagem: 'Erro ao cadastrar aluno.' });
+    conexao.query(query, [tipoMovimentacao, quantidadeMovimentacao, produtoId], (erro, resultados) => {
+        if(!erro){
+            return res.status(201).json({sucesso: true, id: resultados.insertId});
+        }
+        res.status(400).json({erro: 'Erro ao cadastrar movimentação.', detalhe: erro});
+    });
+});
+
+//Método GET para listar movimentações de um produto
+app.get('/mercados/:id/produtos/:produtoId/movimentacoes', (req, res) => {
+    const { id, produtoId } = req.params;
+    const query = 'SELECT * FROM movimentacoes WHERE produto_id = ?';
+
+    conexao.query(query, [produtoId], (erro, resultados) => {
+        if(!erro){
+            return res.status(200).json(resultados);
+        }
+        res.status(400).json({erro: 'Erro ao listar movimentações.', detalhe: erro});
+    });
+});
+
+// Método DELETE para deletar uma movimentação específica
+app.delete('/mercados/:id/produtos/:produtoId/movimentacoes/:movimentacaoId', (req, res) => {
+    const { movimentacaoId } = req.params;
+    const query = 'DELETE FROM movimentacoes WHERE id = ?';
+
+    conexao.query(query, [movimentacaoId], (erro, resultado) => {
+        if (!erro) {
+            // Verifica se alguma linha foi afetada
+            if (resultado.affectedRows > 0) {
+                return res.status(200).json({ sucesso: true, mensagem: 'Movimentação deletada com sucesso' });
+            } else {
+                return res.status(404).json({ sucesso: false, mensagem: 'Movimentação não encontrada' });
             }
-            console.log('Novo aluno adicionado:', novoAluno);
-
-            // Verificar se o curso existe antes de matricular
-            conexao.query('SELECT * FROM cursos WHERE id = ?', [curso_id], (erro, resultados) => {
-                if (erro) {
-                    console.error('Erro ao verificar curso existente:', erro.message);
-                    return res.status(500).json({ mensagem: 'Erro ao verificar curso existente.' });
-                }
-                if (resultados.length === 0) {
-                    return res.status(404).json({ mensagem: 'Curso não encontrado.' });
-                }
-
-                // Agora, vamos cadastrar a matrícula
-                const novaMatricula = { aluno_id: id, curso_id, data_matricula };
-                conexao.query('INSERT INTO matriculas SET ?', novaMatricula, (erro) => {
-                    if (erro) {
-                        console.error('Erro ao cadastrar matrícula:', erro.message);
-                        return res.status(500).json({ mensagem: 'Erro ao cadastrar matrícula.' });
-                    }
-                    res.status(201).json({ mensagem: 'Aluno cadastrado e matriculado com sucesso!', aluno: novoAluno, matricula: novaMatricula });
-                });
-            });
-        });
+        }
+        res.status(400).json({ erro: 'Erro ao deletar movimentação.', detalhe: erro });
     });
 });
 
-// Rota GET para retornar todas as matrículas com informações do aluno e do curso
-server.get('/matriculas', (req, res) => {
-    console.log('Consulta de todas as matrículas');
-    const sqlConsultaMatriculas = `
-        SELECT 
-            m.id AS matricula_id,  -- Use 'm.id' para referir-se à matrícula
-            a.nome AS aluno_nome,
-            m.curso_id,  -- Mantendo o curso_id, mas pode ser alterado conforme necessidade
-            c.nome AS curso_nome,
-            m.data_matricula
-        FROM 
-            matriculas m
-        JOIN 
-            alunos a ON m.aluno_id = a.id
-        JOIN 
-            cursos c ON m.curso_id = c.id
-    `;
-    
-    conexao.query(sqlConsultaMatriculas, (erro, resultados) => {
-        if (erro) {
-            console.error('Erro ao consultar matrículas:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao consultar matrículas.' });
+
+//Método POST para cadastrar movimentação de estoque
+app.post('/mercados/:id/produtos/:produtoId/movimentacoes', (req, res) => {
+    const { id, produtoId } = req.params;
+    const { quantidadeMovimentacao, tipoMovimentacao } = req.body;
+    const query = 'INSERT INTO movimentacoes (quantidade, tipo, produto_id) VALUES (?, ?, ?)';
+
+    conexao.query(qurey, [quantidadeMovimentacao, tipoMovimentacao, produtoId], (erro, resultados) => {
+        if(!erro){
+            return res.status(201).json({sucesso: true, id: resultados.insertId });
         }
-        
-        // Exibir informações das matrículas no console
-        resultados.forEach((matricula) => {
-            console.log(`Aluno: ${matricula.aluno_nome}, Matrícula: ${matricula.matricula_id}, Curso: ${matricula.curso_nome}, Data da Matrícula: ${matricula.data_matricula}`);
-        });
-        
-        // Retorna os resultados
-        res.json(resultados);
+        res.status(400).json({erro: 'Erro ao cadastrar movimentações.', detalhe: erro});
     });
 });
 
-// Rota PATCH para atualizar um aluno existente
-server.patch('/alunos/:id', (req, res) => {
-    const alunoId = req.params.id; // ID do aluno a ser atualizado
-    const { nome, idMatricula } = req.body; // Dados para atualização
+//Método GET para listar movimentações de um produto
+app.get('/mercados/:id/produtos/:produtoId/movimentacoes', (req, res) => {
+    const { id, produtoId } = req.params;
+    const query = 'SELECT * FROM movimentacoes WHERE produto_id = ?';
 
-    // Verifica se todos os campos são obrigatórios
-    if (!nome || !idMatricula) {
-        return res.status(400).json({ mensagem: 'Nome e ID da matrícula são obrigatórios.' });
-    }
-
-    // Atualiza o aluno no banco de dados
-    const sqlAtualizaAluno = 'UPDATE alunos SET nome = ?, idMatricula = ? WHERE id = ?';
-
-    conexao.query(sqlAtualizaAluno, [nome, idMatricula, alunoId], (erro, resultado) => {
-        if (erro) {
-            console.error('Erro ao atualizar aluno:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao atualizar aluno.' });
+    conexao.query(query, [produtoId, id], (erro, resultados) => {
+        if(!erro){
+            return res.status(200).json(resultados);
         }
-        if (resultado.affectedRows === 0) {
-            return res.status(404).json({ mensagem: 'Aluno não encontrado.' });
-        }
-        res.json({ mensagem: 'Aluno atualizado com sucesso!', aluno: { id: alunoId, nome, idMatricula } });
+        res.status(400).json({erro: 'Erro ao listar movimentações.', detalhe: erro});
     });
 });
 
-// Rota PUT para atualizar um aluno existente
-server.put('/alunos/:id', (req, res) => {
-    const alunoId = req.params.id;
-    const { nome, idMatricula } = req.body;
 
-    console.log(`Requisição para atualizar o aluno com id ${alunoId}`);
-    console.log('Body da requisição:', req.body);
-
-    // Verificação básica
-    if (!nome || !idMatricula) {
-        return res.status(400).json({ mensagem: 'Todos os campos são obrigatórios.' });
-    }
-
-    // Atualiza o aluno na tabela
-    const atualizarAlunoSql = 'UPDATE alunos SET nome = ?, idMatricula = ? WHERE id = ?';
-    
-    conexao.query(atualizarAlunoSql, [nome, idMatricula, alunoId], (erro, resultado) => {
-        if (erro) {
-            console.error('Erro ao atualizar aluno:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao atualizar aluno.' });
-        }
-        if (resultado.affectedRows === 0) {
-            return res.status(404).json({ mensagem: 'Aluno não encontrado.' });
-        }
-        res.json({ mensagem: 'Aluno atualizado com sucesso!' });
-    });
-});
-
-// Rota DELETE para remover um aluno existente
-server.delete('/alunos/:id', (req, res) => {
-    const alunoId = req.params.id; // ID do aluno a ser removido
-
-    console.log(`Requisição para remover o aluno com id ${alunoId}`);
-
-    // Deleta o aluno na tabela
-    const sqlDeletaAluno = 'DELETE FROM alunos WHERE id = ?';
-
-    conexao.query(sqlDeletaAluno, [alunoId], (erro, resultado) => {
-        if (erro) {
-            console.error('Erro ao remover aluno:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao remover aluno.' });
-        }
-        if (resultado.affectedRows === 0) {
-            return res.status(404).json({ mensagem: 'Aluno não encontrado.' });
-        }
-        res.json({ mensagem: 'Aluno removido com sucesso!' });
-    });
-});
-
-// Rota DELETE para remover um curso existente
-server.delete('/cursos/:id', (req, res) => {
-    const cursoId = req.params.id; // ID do curso a ser removido
-
-    console.log(`Requisição para remover o curso com id ${cursoId}`);
-
-    // Deleta o curso na tabela
-    const sqlDeletaCurso = 'DELETE FROM cursos WHERE id = ?';
-
-    conexao.query(sqlDeletaCurso, [cursoId], (erro, resultado) => {
-        if (erro) {
-            console.error('Erro ao remover curso:', erro.message);
-            return res.status(500).json({ mensagem: 'Erro ao remover curso.' });
-        }
-        if (resultado.affectedRows === 0) {
-            return res.status(404).json({ mensagem: 'Curso não encontrado.' });
-        }
-        res.json({ mensagem: 'Curso removido com sucesso!' });
-    });
-});
-
-// Inicia o servidor na porta 3000
-server.listen(3000, () => {
-    console.log('Servidor rodando na porta 3000');
+// Iniciar o servidor
+app.listen(PORT, () => {
+    console.log(`Servidor rodando http://localhost:${PORT}`);
 });
